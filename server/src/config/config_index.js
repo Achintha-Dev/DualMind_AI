@@ -1,3 +1,4 @@
+import 'dotenv/config';
 
 // validate required env vars on startup 
 const required = ['GEMINI_API_KEY'];
@@ -14,6 +15,13 @@ const config = {
   env: process.env.NODE_ENV,
   port: parseInt(process.env.PORT,10) || 5000,
   clientUrl: process.env.CLIENT_URL || "http://localhost:5173",
+
+  // Auth 
+  auth: {
+    jwtSecret:      process.env.JWT_SECRET || 'change_this_secret',
+    jwtExpiresIn:   process.env.JWT_EXPIRES_IN || '7d',
+    googleClientId: process.env.GOOGLE_CLIENT_ID || '',
+  },
 
   // gemini ai settings
   gemini: {

@@ -67,7 +67,7 @@ Responsibilities:
 - Identify weak reasoning or missing context.
 - Detect ambiguity or oversimplification.
 - Suggest improvements.
-- Do NOT rewrite the full answer.
+- Rewrite the answer incorporating your improvements.
 - Keep feedback concise and actionable.
 - Maximum 120 words.
 

@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { ask } from '../controllers/chatController.js';
+import { optionalAuth } from '../middleware/optionalAuth.js';
 
 const router = Router();
 
@@ -23,6 +24,6 @@ const router = Router();
    }
  }
  */
-router.post('/ask', ask);
+router.post('/ask', optionalAuth, ask);
 
 export default router;

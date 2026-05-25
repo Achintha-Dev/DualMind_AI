@@ -1,46 +1,63 @@
-import { z } from 'zod'
-import { runDiscussion } from '../services/chatService.js'
+import { z } from 'zod';
+import { runDiscussion } from '../services/chatService.js';
 
-// Input validation schema
+// Input validation
 const askSchema = z.object({
   question: z
-    .string({ required_error: 'question is required' })
-    .min(2,    { message: 'Question must be at least 2 characters.' })
-    .max(2000, { message: 'Question must be under 2000 characters.' })
+    .string({ required_error: 'Question is required.' })
+    .min(2, {
+      message: 'Question must be at least 2 characters.',
+    })
+    .max(2000, {
+      message: 'Question must be under 2000 characters.',
+    })
     .trim(),
-  includeTrace: z.boolean().optional().default(false),
+
+  includeTrace: z
+    .boolean()
+    .optional()
+    .default(false),
 });
 
-/*
+/**
  * POST /api/ask
- * Main endpoint — runs the 3-agent pipeline and returns the final answer.
+ * Runs the DualMind multi-agent pipeline.
  */
 export async function ask(req, res, next) {
   try {
-    // Validate & sanitize input
+    // Validate request body
     const parsed = askSchema.safeParse(req.body);
+
     if (!parsed.success) {
       return res.status(400).json({
-        error: parsed.error.errors[0]?.message || 'Invalid request body.',
+        error:
+          parsed.error.issues[0]?.message ||
+          'Invalid request body.',
       });
     }
- 
+
     const { question, includeTrace } = parsed.data;
- 
-    console.log(`📥 [ask] question="${question.slice(0, 80)}..." trace=${includeTrace}`);
- 
-    const result = await runDiscussion(question, { includeTrace });
- 
-    console.log(`📤 [ask] done in ${result.metadata.duration}ms — ${result.metadata.tokensUsed} tokens`);
- 
-    return res.status(200).json({
-      answer:     result.answer,
-      trace:      result.trace,       // [] unless includeTrace=true
-      tokensUsed: result.metadata.tokensUsed,
-      duration:   result.metadata.duration,
+
+    console.log(
+      `📥 [ask] user=${req.userId} trace=${includeTrace}`
+    );
+
+    const result = await runDiscussion(question, {
+      includeTrace,
+      userId: req.userId,
     });
- 
+
+    console.log(
+      `📤 [ask] done in ${result.metadata.duration}ms — ${result.metadata.tokensUsed} tokens`
+    );
+
+    return res.status(200).json({
+      answer: result.answer,
+      trace: result.trace,
+      metadata: result.metadata,
+    });
+
   } catch (err) {
-    next(err); // pass to global error handler
+    next(err);
   }
 }

@@ -27,7 +27,7 @@ export function errorHandler( err, req, res, next ){
         err.message?.toLowerCase().includes('timeout') ||
         err.message?.toLowerCase().includes('timed out')
     ) {
-        return res.status(422).json({
+        return res.status(504).json({
             error : err.message
         });
     }
