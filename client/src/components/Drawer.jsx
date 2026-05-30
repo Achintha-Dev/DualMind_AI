@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import ThemeToggle from './ThemeToggle'; 
-import {NavLink} from 'react-router-dom'
+import {NavLink, useNavigate} from 'react-router-dom'
 import Login from './LoginAvatar'
 
 import { FaArrowLeft } from 'react-icons/fa6';
@@ -9,10 +9,16 @@ import { FiPlusCircle, FiSearch } from 'react-icons/fi'
 import { RiCloseFill } from "react-icons/ri";
 
 function Drawer({ isOpen, setIsOpen }) {
-
+  const navigate = useNavigate();
   // State to handle desktop expanding and collapsing
   const [isExpanded, setIsExpanded] = useState(false);
   const isMobileExpanded = isOpen || isExpanded;
+
+  function handleNewChat(){
+    sessionStorage.removeItem('guest_messages');
+
+    navigate('/chat');
+  }
 
   return (
     <>
@@ -66,22 +72,20 @@ function Drawer({ isOpen, setIsOpen }) {
 
             {/* Navigation Icon Links */}
             <nav className="flex flex-col gap-3 w-full px-2">
-                <NavLink to={'/'} className="flex items-center gap-4 p-3 rounded-xl bg-zinc-100 text-zinc-900 dark:bg-zinc-800 dark:text-zinc-100 transition-all w-full ">
+                <NavLink to={'/'} onClick={handleNewChat} className="flex items-center gap-4 p-3 rounded-xl bg-zinc-100 text-zinc-900 dark:bg-zinc-800 dark:text-zinc-100 transition-all w-full " title='New Chat'>
                     <span className="text-xl hover:scale-125 transition-transform duration-100 hover:rotate-180"><FiPlusCircle /></span>
                     {isMobileExpanded && <span className="font-medium text-sm animate-fade-in">New chat</span>}
                 </NavLink>
 
                 <NavLink className="flex items-center gap-4 p-3 rounded-xl hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:text-zinc-900 dark:hover:text-zinc-100 transition-all w-full">
-                    <span className="text-xl hover:scale-125"><FiSearch /></span>
-                    {isMobileExpanded && <span className="font-medium text-sm">Discussions</span>}
+                    <span className="text-xl hover:scale-125" title='Search Chat'><FiSearch /></span>
+                    {isMobileExpanded && <span className="font-medium text-sm">Search Chats</span>}
                 </NavLink>
 
-                <NavLink to={'/history'} className="flex items-center gap-4 p-3 rounded-xl hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:text-zinc-900 dark:hover:text-zinc-100 transition-all w-full">
+                <NavLink to={'/history'} className="flex items-center gap-4 p-3 rounded-xl hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:text-zinc-900 dark:hover:text-zinc-100 transition-all w-full" title='Recent chats'>
                     <span className="text-xl hover:scale-125"><FiMessageCircle/></span>
-                    {isMobileExpanded && <span className="font-medium text-sm">Projects</span>}
+                    {isMobileExpanded && <span className="font-medium text-sm">History</span>}
                 </NavLink>
-
-                
             </nav>
         </div>
 

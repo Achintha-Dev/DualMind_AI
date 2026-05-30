@@ -6,12 +6,14 @@ import App from './App.jsx'
 import { BrowserRouter } from 'react-router-dom'
 import AuthProvider from './context/AuthProvider.jsx'
 import ThemeProvider from './context/ThemeProvider.jsx'
+import { Toaster } from 'react-hot-toast';
 
 ReactDOM.createRoot(document.getElementById('root')).render(
    <StrictMode>
     <ThemeProvider>
       <AuthProvider>
         <BrowserRouter>
+          <Toaster position='top-center'/>
           <App />
         </BrowserRouter>
       </AuthProvider>

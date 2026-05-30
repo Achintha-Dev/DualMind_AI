@@ -1,22 +1,98 @@
-import { useEffect, useState, useRef, useCallback } from 'react'; // Added useCallback
+import { useEffect, useState, useRef, useCallback } from 'react'; 
 import { FiCpu } from 'react-icons/fi';
-import ChatInput from '../components/ChatInput';
 import { useLocation, useNavigate } from 'react-router';
+
+import ChatInput from '../components/ChatInput';
 import { askQuestion } from '../api/chatApi';
 import MessageBody from '../components/MessageBody';
+import { useAuth } from '../hooks/useAuth.js'
+import { getConversation } from '../api/historyApi';
 
 function ChatPage() {
   const [messages, setMessages] = useState([]);
   const [question, setQuestion] = useState('');
   const [loading, setLoading] = useState(false);
   const location = useLocation();
+  const { user } = useAuth();
   const navigate = useNavigate();
+  const [conversationId, setConversationId] = useState(null);
+ 
 
+  useEffect(() => {
+    async function loadConversation() {
+
+      const threadId = location.state?.threadId;
+
+      if (!threadId) return;
+
+      try {
+        const data = await getConversation(threadId);
+
+        setConversationId(data.conversation._id);
+
+        setMessages(
+          data.conversation.messages.map(
+            msg => ({
+              role: msg.role,
+              text: msg.text,
+              timestamp: ''
+            })
+          )
+        );
+
+      } catch (error) {
+        console.error(error);
+      }
+    }
+
+    loadConversation();
+
+  }, [location.state]);
+  
   const bottomRef = useRef(null);
   
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, loading]);
+
+
+  // Load Guest Messages On Refresh
+  useEffect(() => {
+    // only for guest users
+    if (!user) {
+      const savedMessages = sessionStorage.getItem('guest_messages');
+
+      if (savedMessages) {
+        const timer = setTimeout(() => {
+          setMessages(JSON.parse(savedMessages));
+        }, 0);
+        return () => clearTimeout(timer);
+      }
+    }
+  }, [user]);
+
+  useEffect(() => {
+    // only save guest chats
+    if (!user && messages.length > 0) {
+
+      sessionStorage.setItem(
+        'guest_messages',
+        JSON.stringify(messages)
+      );
+    }
+  }, [messages, user]);
+
+
+  // Prevent restoring old chats after login.
+  useEffect(() => {
+
+    if (user) {
+      sessionStorage.removeItem('guest_messages');
+    }
+
+  }, [user]);
+
+
 
   // Memoize handleInitialSend with useCallback so it doesn't trigger effect loops
   const handleInitialSend = useCallback(async (initialQuestion) => {
@@ -41,6 +117,7 @@ function ChatPage() {
       };
       
       setMessages((prev) => [...prev, aiMessage]);
+      
     } catch (err) {
       console.error("API error encountered during initial fetch setup:", err);
       setMessages((prev) => [
@@ -51,23 +128,31 @@ function ChatPage() {
           timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
         },
       ]);
+
     } finally {
       setLoading(false);
       // Clean location stack history so page refreshes don't re-execute the request sequence
       navigate(location.pathname, { replace: true, state: {} });
     }
-  }, [location.pathname, navigate]); // Dependencies for memoization
+  }, [location.pathname, navigate]); 
+
+
 
   // Schedule the initial send to avoid sync state updates inside an effect
   useEffect(() => {
+
     const initialQuestion = location.state?.initialQuestion;
+
     if (initialQuestion) {
       const timer = setTimeout(() => {
         handleInitialSend(initialQuestion);
       }, 0);
       return () => clearTimeout(timer);
     }
-  }, [location.state, handleInitialSend]); // Fixed missing hook dependency warning safely
+
+  }, [location.state, handleInitialSend]);
+
+
 
   // Primary workspace interaction submission handler 
   async function handleSend() {
@@ -85,7 +170,16 @@ function ChatPage() {
     setQuestion(''); 
 
     try {
-      const data = await askQuestion(activePayload);
+      const data = await askQuestion(activePayload, conversationId);
+
+      if (
+        !conversationId &&
+        data.conversationId
+      ) {
+        setConversationId(
+          data.conversationId
+        );
+      }
 
       const aiMessage = {
         role: 'assistant',
@@ -104,6 +198,7 @@ function ChatPage() {
           timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
         }
       ]);
+
     } finally {
       setLoading(false);
     }

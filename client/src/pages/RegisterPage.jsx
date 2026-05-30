@@ -1,7 +1,95 @@
 import { GrGoogle } from "react-icons/gr";
 import { NavLink } from "react-router-dom";
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { registerUser } from '../api/authApi.js';
+import { useAuth } from '../hooks/useAuth.js';
+import { toast } from "react-hot-toast";
+
 
 function RegisterPage() {
+  
+  const navigate = useNavigate();
+  const { login } = useAuth();
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  const[formData, setFormData] = useState({
+    firstName: '',
+    lastName: '',
+    email: '',
+    password: ''
+  });
+
+  // input handler
+  function handleChange(e) {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value,
+    });
+  }
+
+  // login submit handler
+  async function handleSubmit(e) {
+    e.preventDefault();
+
+    setError('');
+
+    if(formData.firstName.length === 0){
+      toast.error('Fist name required.');
+      setError('First name required.');
+      return 
+    }
+
+    if(formData.lastName.length === 0){
+      toast.error('Last name required.');
+      setError('Last name required.');
+      return 
+    }
+
+    if (!formData.email.trim()) {
+      toast.error('Email required.');
+      return;
+    }
+
+    if (!formData.password.trim()) {
+      toast.error('Password required.');
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+
+      const payLoad = {
+        name: `${formData.firstName} ${formData.lastName}`.trim(),
+        email: formData.email,
+        password: formData.password,
+      }
+
+      const data = await registerUser(payLoad);
+
+      // save auth globally
+      login(data.user, data.token);
+
+      // redirect to login
+      navigate('/');
+
+    } catch (err) {
+      console.error(err);
+
+      toast.error( err.response?.data?.error ||'Registration failed.');
+
+      setError(
+        err.response?.data?.error ||
+        'Registration failed.'
+      );
+
+    } finally {
+      setLoading(false);
+    }
+  }
+
   return (
     <div className="flex min-h-screen items-center justify-center px-4 py-12 sm:px-6 lg:px-8 font-sans bg-zinc-50 text-zinc-900 dark:bg-[#1a1a1a] dark:text-zinc-100 transition-colors duration-300">
       
@@ -22,7 +110,7 @@ function RegisterPage() {
         </div>
 
         {/* Input Form */}
-        <form action="#" method="POST" className="space-y-5">
+        <form onSubmit={handleSubmit} className="space-y-5">
           
           {/* First & Last Name Grid Layout */}
           <div className="grid grid-cols-2 gap-4">
@@ -37,6 +125,8 @@ function RegisterPage() {
                   name="firstName" 
                   required 
                   placeholder="John"
+                  value={formData.firstName}
+                  onChange={handleChange}
                   className="block w-full rounded-xl px-4 py-3 text-base sm:text-sm border transition-all duration-200
                     bg-zinc-50/50 dark:bg-zinc-900/50
                     border-zinc-200 dark:border-zinc-800 
@@ -58,6 +148,8 @@ function RegisterPage() {
                   name="lastName" 
                   required 
                   placeholder="Doe"
+                  value={formData.lastName}
+                  onChange={handleChange}
                   className="block w-full rounded-xl px-4 py-3 text-base sm:text-sm border transition-all duration-200
                     bg-zinc-50/50 dark:bg-zinc-900/50
                     border-zinc-200 dark:border-zinc-800 
@@ -82,6 +174,8 @@ function RegisterPage() {
                 required 
                 autoComplete="email" 
                 placeholder="you@example.com"
+                value={formData.email}
+                onChange={handleChange}
                 className="block w-full rounded-xl px-4 py-3 text-base sm:text-sm border transition-all duration-200
                   bg-zinc-50/50 dark:bg-zinc-900/50
                   border-zinc-200 dark:border-zinc-800 
@@ -105,6 +199,8 @@ function RegisterPage() {
                 required 
                 autoComplete="new-password" 
                 placeholder="••••••••"
+                value={formData.password}
+                onChange={handleChange}
                 className="block w-full rounded-xl px-4 py-3 text-base sm:text-sm border transition-all duration-200
                   bg-zinc-50/50 dark:bg-zinc-900/50
                   border-zinc-200 dark:border-zinc-800 
@@ -113,18 +209,22 @@ function RegisterPage() {
                   focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 dark:focus:border-blue-500" 
               />
             </div>
-            <p className="mt-1.5 text-xs text-zinc-400 dark:text-zinc-500 pl-1">
-              Must be at least 8 characters long.
-            </p>
           </div>
+
+          {error && (
+            <div className="text-sm text-red-500 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2">
+                {error}
+            </div>
+          )}
 
           {/* Submit Action Button */}
           <div className="pt-2">
             <button 
               type="submit" 
-              className="flex w-full justify-center items-center rounded-xl px-4 py-3 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-500 dark:bg-blue-600 dark:hover:bg-blue-500 shadow-md shadow-blue-500/10 active:scale-[0.98] transition-all duration-150 cursor-pointer"
+              disabled={loading}
+              className="disabled:opacity-50 flex w-full justify-center items-center rounded-xl px-4 py-3 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-500 dark:bg-blue-600 dark:hover:bg-blue-500 shadow-md shadow-blue-500/10 active:scale-[0.98] transition-all duration-150 cursor-pointer"
             >
-              Get started
+              {loading ? 'Registering...':'Get started'}
             </button>
           </div>
 

@@ -13,6 +13,10 @@ const askSchema = z.object({
     })
     .trim(),
 
+  conversationId: z
+    .string()
+    .optional(),
+
   includeTrace: z
     .boolean()
     .optional()
@@ -36,7 +40,7 @@ export async function ask(req, res, next) {
       });
     }
 
-    const { question, includeTrace } = parsed.data;
+    const { question, conversationId, includeTrace } = parsed.data;
 
     console.log(
       `📥 [ask] user=${req.userId} trace=${includeTrace}`
@@ -44,6 +48,7 @@ export async function ask(req, res, next) {
 
     const result = await runDiscussion(question, {
       includeTrace,
+      conversationId,
       userId: req.userId,
     });
 
@@ -53,6 +58,7 @@ export async function ask(req, res, next) {
 
     return res.status(200).json({
       answer: result.answer,
+      conversationId: result.conversationId,
       trace: result.trace,
       metadata: result.metadata,
     });

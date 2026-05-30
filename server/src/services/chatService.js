@@ -40,11 +40,15 @@ export async function runDiscussion(question, options = {}) {
 
     // Save history asynchronously
     if (options.userId) {
-      saveConversation(
+
+      const conversationId =
+      await saveConversation(
         options.userId,
+        options.conversationId,
         question,
         result.finalAnswer,
         result.totalTokens
+
       ).catch((err) => {
         console.error(
           '⚠️ History save error:',
@@ -57,6 +61,8 @@ export async function runDiscussion(question, options = {}) {
 
     return {
       answer: result.finalAnswer,
+
+      conversationId: options.conversationId,
 
       trace: result.steps ?? [],
 

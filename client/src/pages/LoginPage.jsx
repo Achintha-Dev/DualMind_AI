@@ -1,7 +1,63 @@
 import { GrGoogle } from "react-icons/gr";
 import { NavLink } from "react-router-dom"; // Adjusted to standard react-router-dom
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { loginUser } from '../api/authApi.js';
+import { useAuth } from '../hooks/useAuth.js';
+import { toast } from "react-hot-toast";
 
 function LoginPage() {
+
+  const navigate = useNavigate();
+  const { login } = useAuth();
+  
+  const[formData, setFormData] = useState({
+    email:'',
+    password: '',
+  });
+
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  // input handler
+  function handleChange(e) {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value,
+    });
+  }
+
+  // login submit handler
+  async function handleSubmit(e) {
+    e.preventDefault();
+
+    setError('');
+    setLoading(true);
+
+
+    try {
+      const data = await loginUser(formData);
+
+      // save auth globally
+      login(data.user, data.token);
+
+      // redirect to chat
+      navigate('/');
+
+    } catch (err) {
+      console.error(err);
+      toast.error(err.response?.data?.error || 'Login failed.');
+
+      setError(
+        err.response?.data?.error ||
+        'Login failed.'
+      );
+
+    } finally {
+      setLoading(false);
+    }
+  }
+
   return (
     <div className="flex min-h-screen items-center justify-center px-4 py-12 sm:px-6 lg:px-8 font-sans bg-zinc-50 text-zinc-900 dark:bg-[#1a1a1a] dark:text-zinc-100 transition-colors duration-300">
       
@@ -22,7 +78,7 @@ function LoginPage() {
         </div>
 
         {/* Input Form */}
-        <form action="#" method="POST" className="space-y-5">
+        <form onSubmit={handleSubmit} className="space-y-5">
 
           {/* Email section */}
           <div>
@@ -37,6 +93,8 @@ function LoginPage() {
                 required 
                 autoComplete="email" 
                 placeholder="you@example.com"
+                value={formData.email}
+                onChange={handleChange}
                 className="block w-full rounded-xl px-4 py-3 text-base sm:text-sm border transition-all duration-200
                   bg-zinc-50/50 dark:bg-zinc-900/50
                   border-zinc-200 dark:border-zinc-800 
@@ -67,6 +125,8 @@ function LoginPage() {
                 required 
                 autoComplete="current-password" 
                 placeholder="••••••••"
+                value={formData.password}
+                onChange={handleChange}
                 className="block w-full rounded-xl px-4 py-3 text-base sm:text-sm border transition-all duration-200
                   bg-zinc-50/50 dark:bg-zinc-900/50
                   border-zinc-200 dark:border-zinc-800 
@@ -77,13 +137,20 @@ function LoginPage() {
             </div>
           </div>
 
+          {error && (
+            <div className="text-sm text-red-500 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2">
+                {error}
+            </div>
+          )}  
+
           {/* Submit Action Button */}
           <div className="pt-2">
             <button 
               type="submit" 
-              className="flex w-full justify-center items-center rounded-xl px-4 py-3 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-500 dark:bg-blue-600 dark:hover:bg-blue-500 shadow-md shadow-blue-500/10 active:scale-[0.98] transition-all duration-150 cursor-pointer"
+              disabled={loading}
+              className="disabled:opacity-50 flex w-full justify-center items-center rounded-xl px-4 py-3 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-500 dark:bg-blue-600 dark:hover:bg-blue-500 shadow-md shadow-blue-500/10 active:scale-[0.98] transition-all duration-150 cursor-pointer"
             >
-              Sign in
+              {loading ? 'Signing in...' : 'Sign in'}
             </button>
           </div>
 

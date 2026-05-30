@@ -28,6 +28,7 @@ const conversationListFields = {
 /** Save conversation */
 export async function saveConversation(
     userId,
+    conversationId,
     question,
     answer,
     tokensUsed = 0
@@ -38,24 +39,60 @@ export async function saveConversation(
         throw new Error('User ID is required.');
     }
 
-    const conversation = await Conversation.create({
-        userId,
-        title: makeTitle(question),
-        messages: [
-        {
-            role: 'user',
-            text: question,
-        },
-        {
-            role: 'assistant',
-            text: answer,
-        },
-        ],
-        tokensUsed,
-    });
+    // Existing conversation
+    if (conversationId) {
+
+        const conversation =
+            await Conversation.findOne({
+                _id: conversationId,
+                userId,
+            });
+
+        if (conversation) {
+
+            conversation.messages.push(
+                {
+                    role: 'user',
+                    text: question,
+                },
+                {
+                    role: 'assistant',
+                    text: answer,
+                }
+            );
+
+            conversation.tokensUsed += tokensUsed;
+
+            await conversation.save();
+
+            console.log(
+                `💾 Conversation updated: ${conversation._id}`
+            );
+
+            return conversation._id.toString();
+        }
+    }
+
+    // New conversation
+    const conversation =
+        await Conversation.create({
+            userId,
+            title: makeTitle(question),
+            messages: [
+                {
+                    role: 'user',
+                    text: question,
+                },
+                {
+                    role: 'assistant',
+                    text: answer,
+                },
+            ],
+            tokensUsed,
+        });
 
     console.log(
-        `💾 Conversation saved: ${conversation._id} (user: ${userId})`
+        `💾 Conversation created: ${conversation._id}`
     );
 
     return conversation._id.toString();

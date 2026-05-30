@@ -10,7 +10,8 @@ import {
 
 const registerSchema = z.object({
   name:     z.string().min(2).max(80).trim(),
-  email:    z.email().trim(),
+  email:    z.email().trim()
+            .regex(/^[^\s@]+@[^\s@]+\.[^\s@]+$/, 'Please enter valid email.'),
   password: z.string().min(8, { message: 'Password must be at least 8 characters.' })
             .regex(/[A-Z]/, 'Must contain uppercase letter')
             .regex(/[0-9]/, 'Must contain a number'),
@@ -53,7 +54,7 @@ export async function register(req, res) {
 
   } catch (error) {
     console.error(error);
-    return res.status(500).json({ error: 'Registration failed. Please try again.' });
+    return res.status(500).json({ error: error.message || 'Registration failed. Please try again.' });
   }
 }
 
