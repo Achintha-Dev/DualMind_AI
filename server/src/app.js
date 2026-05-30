@@ -33,7 +33,7 @@ app.use(cors({
 app.use(express.json( { limit:'10kb' } ));
 
 // rate limit
-app.use('/api/', rateLimit);
+// app.use('/api/', rateLimit);
 
 // health check
 app.get('/health',(__, res) => {

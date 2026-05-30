@@ -147,3 +147,11 @@ export async function getMe(req, res) {
     return res.status(500).json({ error: 'Failed to fetch user data.' });
   }
 }
+
+/** GET /api/auth/logout  (protected) */
+export async function logout(_, res) {
+  return res.status(200).json({
+    success: true,
+    message: 'Logged out successfully.',
+  });
+}

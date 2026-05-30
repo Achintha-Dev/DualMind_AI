@@ -5,6 +5,7 @@ import {
   login,
   googleAuth,
   getMe,
+  logout,
 } from '../controllers/authController.js';
 
 import { authenticate } from '../middleware/authenticate.js';
@@ -17,6 +18,7 @@ const router = Router();
 router.post('/register', register);
 router.post('/login', login);
 router.post('/google', googleAuth);
+router.post('/logout', logout);
 
 /**
  * Protected Routes

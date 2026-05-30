@@ -5,7 +5,7 @@ import Login from './LoginAvatar'
 
 import { FaArrowLeft } from 'react-icons/fa6';
 import { FiMenu, FiMessageCircle } from 'react-icons/fi';
-import { FiPlusCircle, FiSearch } from 'react-icons/fi'
+import { FiPlusCircle } from 'react-icons/fi'
 import { RiCloseFill } from "react-icons/ri";
 
 function Drawer({ isOpen, setIsOpen }) {
@@ -77,10 +77,7 @@ function Drawer({ isOpen, setIsOpen }) {
                     {isMobileExpanded && <span className="font-medium text-sm animate-fade-in">New chat</span>}
                 </NavLink>
 
-                <NavLink className="flex items-center gap-4 p-3 rounded-xl hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:text-zinc-900 dark:hover:text-zinc-100 transition-all w-full">
-                    <span className="text-xl hover:scale-125" title='Search Chat'><FiSearch /></span>
-                    {isMobileExpanded && <span className="font-medium text-sm">Search Chats</span>}
-                </NavLink>
+                
 
                 <NavLink to={'/history'} className="flex items-center gap-4 p-3 rounded-xl hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:text-zinc-900 dark:hover:text-zinc-100 transition-all w-full" title='Recent chats'>
                     <span className="text-xl hover:scale-125"><FiMessageCircle/></span>
