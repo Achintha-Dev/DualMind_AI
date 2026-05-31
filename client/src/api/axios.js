@@ -1,25 +1,29 @@
 import axios from 'axios';
 
 const api = axios.create({
-    baseURL: 'http://localhost:5000/api'
+    baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5000/api',
 });
 
-// automatically attach token if user logged in
-// guest user → no token
-// logged user → token attached automatically
-
+// Automatically attach JWT token if user is logged in
 api.interceptors.request.use((config) => {
-
     const token = localStorage.getItem('token');
-
-    console.log('TOKEN:', token);
 
     if (token) {
         config.headers.Authorization = `Bearer ${token}`;
     }
 
     return config;
-
 });
+
+// Handle 401 responses globally — clear stale token
+api.interceptors.response.use(
+    (response) => response,
+    (error) => {
+        if (error.response?.status === 401) {
+            localStorage.removeItem('token');
+        }
+        return Promise.reject(error);
+    }
+);
 
 export default api;

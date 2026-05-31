@@ -6,12 +6,13 @@ import { judgePrompt } from '../prompts/prompt_index.js'
  * Writes the final polished answer the user will see.
  *
  * @param {string} question
- * @param {string} criticAnswer
+ * @param {string} analystAnswer
+ * @param {string} criticFeedback
  * @returns {Promise<{ text: string, tokens: number }>}
  */
 
-export async function runJudge(question, criticAnswer, overrides = {}) {
-    const prompt = judgePrompt.createPrompt(question, criticAnswer );
-    const opts = { maxOutputTokens: 600, temperature: 0.3 };
+export async function runJudge(question, analystAnswer, criticFeedback, overrides = {}) {
+    const prompt = `${judgePrompt.system}\n${judgePrompt.createPrompt(question, analystAnswer, criticFeedback)}`;
+    const opts = Object.assign({ maxOutputTokens: 1200, temperature: 0.3 }, overrides);
     return callLLM(prompt, opts);
 }

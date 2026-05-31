@@ -1,6 +1,6 @@
 import 'dotenv/config';
 
-// validate required env vars on startup 
+// Validate required env vars on startup
 const required = ['GEMINI_API_KEY'];
 
 required.forEach((key) => {
@@ -12,44 +12,43 @@ required.forEach((key) => {
 const config = {
 
   // server
-  env: process.env.NODE_ENV,
-  port: parseInt(process.env.PORT,10) || 5000,
-  clientUrl: process.env.CLIENT_URL || "http://localhost:5173",
+  env:       process.env.NODE_ENV,
+  port:      parseInt(process.env.PORT, 10) || 5000,
+  clientUrl: process.env.CLIENT_URL || 'http://localhost:5173',
 
-  // Auth 
+  // Auth
   auth: {
     jwtSecret:      process.env.JWT_SECRET || 'change_this_secret',
     jwtExpiresIn:   process.env.JWT_EXPIRES_IN || '7d',
     googleClientId: process.env.GOOGLE_CLIENT_ID || '',
   },
 
-  // gemini ai settings
+  // Gemini AI settings
   gemini: {
-    apiKey:          process.env.GEMINI_API_KEY || '',
-    model:           'models/gemini-3.1-flash-lite',   // valid v1 model name
-    maxOutputTokens: 400,                         // default max response length
-    temperature:     0.7,                         // 0 = deterministic, 1 = creative
-    requestTimeoutMs: 20000,                      // per-model request timeout
-    // fallbackModels: tried in order when the primary model fails (quota/unavailable)
+    apiKey:           process.env.GEMINI_API_KEY || '',
+    model:            'models/gemini-2.0-flash-lite',  // primary — fast & cheap
+    maxOutputTokens:  1200,
+    temperature:      0.7,
+    requestTimeoutMs: 20000,
+    // Fallbacks tried in order when primary fails (quota / unavailable)
     fallbackModels: [
-      'models/gemini-1.5-flash',
-      'models/gemini-2.0-flash-lite',
       'models/gemini-2.5-flash',
+      'models/gemini-2.0-flash',
     ],
   },
 
-  // Orchestration Limits 
+  // Orchestration limits
   orchestration: {
-    tokenBudget: 6000,      // Max total tokens across all 3 agents per request
-    timeoutMs:   90000,    // Hard timeout: kill request after _ seconds
-    maxRetries:  2,         // Retry a failed agent call up to 2 times
+    tokenBudget: 15000,   // Max total tokens across all 3 agents per request
+    timeoutMs:   120000,  // Hard timeout: kill request after 120 seconds
+    maxRetries:  2,       // Retry a failed agent call up to 2 times
   },
- 
-  // Rate Limiting
+
+  // Rate limiting
   rateLimit: {
     windowMs: 15 * 60 * 1000,  // 15-minute window
     max:      20,               // Max 20 requests per IP per window
   },
-}
+};
 
 export default config;

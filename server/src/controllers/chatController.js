@@ -5,12 +5,8 @@ import { runDiscussion } from '../services/chatService.js';
 const askSchema = z.object({
   question: z
     .string({ required_error: 'Question is required.' })
-    .min(2, {
-      message: 'Question must be at least 2 characters.',
-    })
-    .max(2000, {
-      message: 'Question must be under 2000 characters.',
-    })
+    .min(2, { message: 'Question must be at least 2 characters.',})
+    .max(2000, { message: 'Question must be under 2000 characters.',})
     .trim(),
 
   conversationId: z

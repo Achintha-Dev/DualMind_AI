@@ -5,16 +5,16 @@ import { runJudge } from '../agents/judge.js'
 
 export async function orchestrate(question, options = {}) {
     try {
-        const { includeTrace = false } = options;
+        const { includeTrace = false, history = [] } = options;
         const { tokenBudget } = config.orchestration;
 
         const steps = [];
         let totalTokens = 0;
 
         const agentDefaults = {
-            Analyst: { maxOutputTokens: 400 },
-            Critic: { maxOutputTokens: 350 },
-            Judge: { maxOutputTokens: 600 },
+            Analyst: { maxOutputTokens: 800 },
+            Critic:  { maxOutputTokens: 700 },
+            Judge:   { maxOutputTokens: 1200 },
         };
 
         function getAgentCap(agentName, remainingAgents) {
@@ -24,9 +24,9 @@ export async function orchestrate(question, options = {}) {
             return Math.min(defaultCap, budgetCap);
         }
 
-        async function runAgent(name, fn, args = [], overrides = {}) {
+        async function runAgent(name, fn, args = []) {
             const start = Date.now();
-            const result = await fn(...args, overrides);
+            const result = await fn(...args);
             const duration = Date.now() - start;
             totalTokens += result.tokens;
 
@@ -48,28 +48,25 @@ export async function orchestrate(question, options = {}) {
             return result.text;
         }
 
-        // Stage 1: Analyst
+        // Stage 1: Analyst — receives question + conversation history
         const analystOutput = await runAgent(
             'Analyst',
             runAnalyst,
-            [question],
-            { maxOutputTokens: getAgentCap('Analyst', 3) }
+            [question, history, { maxOutputTokens: getAgentCap('Analyst', 3) }]
         );
 
-        // Stage 2: Critic
+        // Stage 2: Critic — reviews analyst draft
         const criticOutput = await runAgent(
             'Critic',
             runCritic,
-            [question, analystOutput],
-            { maxOutputTokens: getAgentCap('Critic', 2) }
+            [question, analystOutput, { maxOutputTokens: getAgentCap('Critic', 2) }]
         );
 
-        // Stage 3: Judge (final output)
+        // Stage 3: Judge — merges analyst + critic into final answer
         const finalAnswer = await runAgent(
             'Judge',
             runJudge,
-            [question, criticOutput],
-            { maxOutputTokens: getAgentCap('Judge', 1) }
+            [question, analystOutput, criticOutput, { maxOutputTokens: getAgentCap('Judge', 1) }]
         );
 
         return {

@@ -6,23 +6,23 @@ import {
   getUserById,
 } from '../services/authService.js';
 
-// Validation schemas 
+// Validation schemas
 
 const registerSchema = z.object({
   name:     z.string().min(2).max(80).trim(),
-  email:    z.email().trim()
-            .regex(/^[^\s@]+@[^\s@]+\.[^\s@]+$/, 'Please enter valid email.'),
-  password: z.string().min(8, { message: 'Password must be at least 8 characters.' })
-            .regex(/[A-Z]/, 'Must contain uppercase letter')
-            .regex(/[0-9]/, 'Must contain a number'),
+  email:    z.string().email('Please enter a valid email.').trim(),
+  password: z.string()
+              .min(8, { message: 'Password must be at least 8 characters.' })
+              .regex(/[A-Z]/, 'Must contain an uppercase letter.')
+              .regex(/[0-9]/, 'Must contain a number.'),
 });
 
 const loginSchema = z.object({
-  email:    z.email().trim(),
+  email:    z.string().email().trim(),
   password: z.string().min(1),
 });
 
-// Controllers 
+// Controllers
 
 /** POST /api/auth/register */
 export async function register(req, res) {
@@ -31,7 +31,7 @@ export async function register(req, res) {
 
     if (!parsed.success) {
       return res.status(400).json({
-        error:parsed.error.issues[0]?.message || 'Invalid input.',
+        error: parsed.error.issues[0]?.message || 'Invalid input.',
       });
     }
 
@@ -40,21 +40,19 @@ export async function register(req, res) {
     console.log(`👤 New user registered: ${user.email}`);
 
     const safeUser = {
-        id: user._id,
-        name: user.name,
-        email: user.email,
-        avatar: user.avatar,
-        provider: user.provider,
+      id:       user._id,
+      name:     user.name,
+      email:    user.email,
+      avatar:   user.avatar,
+      provider: user.provider,
     };
 
-    return res.status(201).json({
-      user:  safeUser,
-      token,
-    });
+    return res.status(201).json({ user: safeUser, token });
 
   } catch (error) {
     console.error(error);
-    return res.status(500).json({ error: error.message || 'Registration failed. Please try again.' });
+    const status = error.status || 500;
+    return res.status(status).json({ error: error.message || 'Registration failed. Please try again.' });
   }
 }
 
@@ -72,17 +70,14 @@ export async function login(req, res) {
     console.log(`🔐 User logged in: ${user.email}`);
 
     const safeUser = {
-        id: user._id,
-        name: user.name,
-        email: user.email,
-        avatar: user.avatar,
-        provider: user.provider,
+      id:       user._id,
+      name:     user.name,
+      email:    user.email,
+      avatar:   user.avatar,
+      provider: user.provider,
     };
 
-    return res.json({
-      user:  safeUser,
-      token,
-    });
+    return res.json({ user: safeUser, token });
 
   } catch (error) {
     console.error(error);
@@ -93,10 +88,7 @@ export async function login(req, res) {
 /** POST /api/auth/google */
 export async function googleAuth(req, res) {
   try {
-    const schema = z.object({
-        idToken: z.string().min(10),
-    });
-
+    const schema = z.object({ idToken: z.string().min(10) });
     const parsed = schema.safeParse(req.body);
 
     if (!parsed.success) {
@@ -108,17 +100,14 @@ export async function googleAuth(req, res) {
     console.log(`🔐 Google login: ${user.email}`);
 
     const safeUser = {
-        id: user._id,
-        name: user.name,
-        email: user.email,
-        avatar: user.avatar,
-        provider: user.provider,
+      id:       user._id,
+      name:     user.name,
+      email:    user.email,
+      avatar:   user.avatar,
+      provider: user.provider,
     };
 
-    return res.json({
-      user:  safeUser,
-      token,
-    });
+    return res.json({ user: safeUser, token });
 
   } catch (error) {
     console.error(error);
@@ -126,20 +115,23 @@ export async function googleAuth(req, res) {
   }
 }
 
-/** GET /api/auth/me  (protected) */
+/** GET /api/auth/me (protected) */
 export async function getMe(req, res) {
   try {
     const user = await getUserById(req.userId);
+
     if (!user) {
       return res.status(404).json({ error: 'User not found.' });
     }
+
     const safeUser = {
-        id: user._id,
-        name: user.name,
-        email: user.email,
-        avatar: user.avatar,
-        provider: user.provider,
+      id:       user._id,
+      name:     user.name,
+      email:    user.email,
+      avatar:   user.avatar,
+      provider: user.provider,
     };
+
     return res.json({ user: safeUser });
 
   } catch (error) {
@@ -148,7 +140,7 @@ export async function getMe(req, res) {
   }
 }
 
-/** GET /api/auth/logout  (protected) */
+/** POST /api/auth/logout (changed from GET — logout should not be idempotent GET) */
 export async function logout(_, res) {
   return res.status(200).json({
     success: true,

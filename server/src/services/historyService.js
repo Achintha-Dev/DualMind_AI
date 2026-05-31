@@ -143,3 +143,50 @@ export async function clearAllConversations(userId) {
 
     return result.deletedCount;
 }
+
+/* continue existing conversation with its previous memory*/
+export async function updateConversation(
+    conversationId,
+    userId,
+    question,
+    answer,
+    tokensUsed = 0
+) {
+    const conversation = await Conversation.findOne({
+        _id: conversationId,
+        userId,
+    });
+
+    if (!conversation) {
+        throw new Error('Conversation not found');
+    }
+
+    conversation.messages.push(
+        {
+            role: 'user',
+            text: question,
+        },
+        {
+            role: 'assistant',
+            text: answer,
+        }
+    );
+
+    conversation.tokensUsed += tokensUsed;
+
+    await conversation.save();
+
+    return conversation._id.toString();
+}
+
+export async function getConversationMessages(
+  conversationId,
+  userId
+) {
+  const conversation = await Conversation.findOne({
+    _id: conversationId,
+    userId,
+  }).lean();
+
+  return conversation?.messages || [];
+}
