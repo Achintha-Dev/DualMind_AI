@@ -1,9 +1,10 @@
-import { GrGoogle } from "react-icons/gr";
+import { useTheme } from '../hooks/useTheme.js';
 import { NavLink } from "react-router-dom";
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { registerUser } from '../api/authApi.js';
+import { registerUser, googleAuth } from '../api/authApi.js';
 import { useAuth } from '../hooks/useAuth.js';
+import { GoogleLogin } from '@react-oauth/google'
 import { toast } from "react-hot-toast";
 
 
@@ -13,6 +14,7 @@ function RegisterPage() {
   const { login } = useAuth();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const { theme } = useTheme();
 
   const[formData, setFormData] = useState({
     firstName: '',
@@ -241,18 +243,27 @@ function RegisterPage() {
           </div>
 
           {/* Google SSO Button */}
-          <div>
-            <button 
-              type="button" 
-              className="flex w-full justify-center items-center gap-2 rounded-xl px-4 py-3 text-sm font-semibold border transition-all duration-150 active:scale-[0.98] cursor-pointer
-                bg-white dark:bg-transparent
-                border-zinc-200 dark:border-zinc-800 
-                text-zinc-700 dark:text-zinc-300 
-                hover:bg-zinc-50 dark:hover:bg-zinc-800/40"
-            >
-              <GrGoogle className="text-base text-green-500 dark:text-zinc-300" />
-              Google
-            </button>
+         <div className="w-full flex justify-center [&>div]:w-full transition-all duration-150 active:scale-[0.99]">
+            <GoogleLogin
+              onSuccess={async (credentialResponse) => {
+                try {
+                  const res = await googleAuth(credentialResponse.credential);
+                  login(res.user, res.token);
+                  navigate('/');
+                } catch (err) {
+                  toast.error('Google login failed. Please try again.');
+                  console.error('Google login failed:', err);
+                }
+              }}
+              onError={() => toast.error('Google sign-in was cancelled.')}
+              
+              /* Configured Properties to optimize UI styling */
+              text="continue_with"
+              shape="pill" 
+              size="large"
+              width="100%"
+              theme={theme === 'dark' ? 'filled_black' : 'outline'}
+            />
           </div>
         </form>
 

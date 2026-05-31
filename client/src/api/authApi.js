@@ -10,6 +10,11 @@ export async function loginUser(data) {
     return response.data;
 }
 
+export async function googleAuth(accessToken) {
+    const response = await api.post('/auth/google', { idToken: accessToken });
+    return response.data;
+}
+
 export async function getCurrentUser() {
     const response = await api.get('/auth/me');
     return response.data;
