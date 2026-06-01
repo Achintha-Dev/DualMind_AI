@@ -26,7 +26,7 @@ app.use(morgan(process.env.NODE_ENV === 'production' ? 'combined' : 'dev'));
 
 // CORS — must include DELETE for history endpoints
 app.use(cors({
-    origin: process.env.CLIENT_URL || 'http://localhost:5173',
+    origin: [process.env.CLIENT_URL || 'http://localhost:5173', 'https://dual-mind-ai-kappa.vercel.app',],
     methods: ['GET', 'POST', 'DELETE'],
     allowedHeaders: ['Content-Type', 'Authorization'],
 }));
