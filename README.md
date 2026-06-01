@@ -35,8 +35,7 @@ Unlike traditional AI chatbots that rely on a single model response, DualMind us
 This approach encourages deeper reasoning, improved accuracy, and more balanced responses.
 
 ## Live Demo
-Coming soon...
-
+Check out the deployed application here: [DualMind AI Live](https://dual-mind-ai-kappa.vercel.app)
 ---
 
 ## Screenshots
