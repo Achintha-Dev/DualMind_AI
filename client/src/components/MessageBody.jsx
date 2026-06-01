@@ -44,9 +44,9 @@ function MessageBody({ messages, loading, bottomRef }) {
                 {/* Copy Action Button Element - Positioned absolutely at the top right of the bubble */}
                 {msg.role === 'assistant' && (
                   <button
-                    onClick={() => handleCopy(msg.text, idx)}
+                    onClick={() => handleCopy(msg.type === 'image' ? msg.imageUrl : msg.text, idx)}
                     className="absolute top-2 right-2 p-1.5 rounded-lg bg-zinc-100 dark:bg-zinc-800 border border-zinc-200/60 dark:border-zinc-700/60 text-zinc-500 dark:text-zinc-400 opacity-0 group-hover/bubble:opacity-100 hover:bg-zinc-200 dark:hover:bg-zinc-700 hover:text-zinc-800 dark:hover:text-zinc-200 transition-all duration-200 z-10"
-                    title="Copy response"
+                    title={msg.type === 'image' ? 'Copy image URL' : 'Copy response'}
                   >
                     {copiedIndex === idx ? (
                       <FiCheck size={14} className="text-green-600 dark:text-emerald-400" />
@@ -57,7 +57,36 @@ function MessageBody({ messages, loading, bottomRef }) {
                 )}
 
                 <div className={msg.role === 'assistant' ? 'pr-6' : ''}>
-                  <ChatMarkdown msg={{ text: msg.text || '' }} />
+                  
+                  {msg.type === 'image' ? (
+                    <div className="space-y-3">
+                      <img
+                        src={msg.imageUrl}
+                        alt="Generated image"
+                        crossOrigin="anonymous"
+                        className="rounded-xl w-full border border-zinc-200 dark:border-zinc-700 shadow-md bg-zinc-100 dark:bg-zinc-800 min-h-[200px]"
+                        
+                      />
+                      {/* Error fallback — hidden by default */}
+                      <p className="text-xs text-red-400 hidden">
+                        ⚠️ Image failed to load.{' '}
+                        <a href={msg.imageUrl} target="_blank" rel="noreferrer" className="underline">
+                          Try opening directly ↗
+                        </a>
+                      </p>
+                      <p className="text-xs text-zinc-400 dark:text-zinc-500 italic">{msg.text}</p>
+                      
+                      <a href={msg.imageUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-xs text-blue-500 hover:underline block"
+                      >
+                        Open full size ↗
+                      </a>
+                    </div>
+                  ) : (
+                    <ChatMarkdown msg={{ text: msg.text || '' }} />
+                  )}
                 </div>
               </div>
               

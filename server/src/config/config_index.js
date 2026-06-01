@@ -26,7 +26,7 @@ const config = {
   // Gemini AI settings
   gemini: {
     apiKey:           process.env.GEMINI_API_KEY || '',
-    model:            'models/gemini-2.0-flash-lite',  // primary — fast & cheap
+    model:            'models/gemini-2.5-flash-lite',  // primary — fast & cheap
     maxOutputTokens:  1200,
     temperature:      0.7,
     requestTimeoutMs: 20000,

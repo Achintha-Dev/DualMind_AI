@@ -75,7 +75,8 @@ export async function orchestrate(question, options = {}) {
             totalTokens,
         };
     } catch (error) {
-        console.error('❌ Orchestration failed:', error.message);
+        const short = error.message.substring(0, 80);
+        console.error(`❌ Orchestration failed: ${short}`);
         throw error;
     }
 }

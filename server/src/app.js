@@ -14,6 +14,8 @@ import historyRoutes from './routes/historyRoutes.js';
 import { authenticate } from './middleware/authenticate.js';
 import { errorHandler } from './utils/errorHandler.js';
 import { rateLimit } from './utils/rateLimiter.js';
+import imageRoutes from './routes/imageRoutes.js';
+
 
 const app = express();
 connectDB();
@@ -48,6 +50,7 @@ app.get('/health', (__, res) => {
 app.use('/api/chat', chatRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/history', authenticate, historyRoutes);
+app.use('/api/image', imageRoutes);
 
 // 404 handler
 app.use((req, res) => {

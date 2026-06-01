@@ -77,8 +77,10 @@ export async function runDiscussion(question, options = {}) {
     };
 
   } catch (error) {
-    console.error('❌ Chat service error:', error.message);
+    const short = error.message.substring(0, 80);
+    console.error(`❌ Chat service error: ${short}`);
     throw error;
+
   } finally {
     clearTimeout(timeoutId);
   }

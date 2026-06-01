@@ -17,6 +17,7 @@ function getClient() {
 }
 
 function withTimeout(promise, ms) {
+
     return new Promise((resolve, reject) => {
         const id = setTimeout(() => {
             reject(new Error(`LLM request timed out after ${ms}ms`));
@@ -25,11 +26,13 @@ function withTimeout(promise, ms) {
         promise.then((result) => {
             clearTimeout(id);
             resolve(result);
+
         }).catch((error) => {
             clearTimeout(id);
             reject(error);
         });
     });
+
 }
 
 /*
@@ -73,9 +76,13 @@ export async function callGemini(prompt, options = {}) {
 
             console.log(`ℹ️ [Gemini] ${modelName} responded with ${tokens} tokens`);
             return { text: text.trim(), tokens, model: modelName };
+
         } catch (err) {
             lastErr = err;
-            console.warn(`⚠️ ${modelName} failed: ${err.message}`);
+            // Extract just the status code for a clean log
+            const status = err.message.match(/\[(\d{3})/)?.[1] || 'ERR';
+            console.warn(`⚠️ [${modelName}] failed with ${status}`);
+
             if (modelName === modelsToTry[modelsToTry.length - 1]) {
                 throw lastErr;
             }

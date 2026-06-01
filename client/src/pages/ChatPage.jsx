@@ -3,13 +3,30 @@ import { FiCpu } from 'react-icons/fi';
 import { useLocation, useNavigate } from 'react-router';
 
 import ChatInput from '../components/ChatInput';
+import { generateImage } from '../api/imageApi.js';
 import { askQuestion } from '../api/chatApi';
 import MessageBody from '../components/MessageBody';
 import { useAuth } from '../hooks/useAuth.js';
 import { getConversation } from '../api/historyApi';
+import { toast } from 'react-hot-toast';
+
+function isImageRequest(text) {
+  const lower = text.toLowerCase();
+  const imageWords = ['image', 'picture', 'photo', 'illustration', 'art', 'poster', 'logo', 'drawing', 'painting'];
+  const actionWords = ['generate', 'create', 'draw', 'make', 'show', 'paint', 'design', 'produce'];
+  return imageWords.some(w => lower.includes(w)) && actionWords.some(w => lower.includes(w));
+}
 
 function ChatPage() {
-  const [messages, setMessages] = useState([]);
+  const [messages, setMessages] = useState(() => {
+    try {
+      const saved = sessionStorage.getItem('guest_messages');
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
+
   const [question, setQuestion] = useState('');
   const [loading, setLoading] = useState(false);
   const [conversationId, setConversationId] = useState(null);
@@ -47,20 +64,6 @@ function ChatPage() {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, loading]);
 
-  // Restore guest messages on page load/refresh
-  useEffect(() => {
-    if (!user) {
-      const saved = sessionStorage.getItem('guest_messages');
-      if (saved) {
-        try {
-          setMessages(JSON.parse(saved));
-        } catch {
-          sessionStorage.removeItem('guest_messages');
-        }
-      }
-    }
-  }, [user]);
-
   // Persist guest messages to sessionStorage
   useEffect(() => {
     if (!user && messages.length > 0) {
@@ -79,9 +82,11 @@ function ChatPage() {
   const handleInitialSend = useCallback(async (initialQuestion) => {
     if (!initialQuestion.trim()) return;
 
+    const trimmed = initialQuestion.trim();
+
     const userMessage = {
       role: 'user',
-      text: initialQuestion,
+      text: trimmed,
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
     };
 
@@ -89,35 +94,42 @@ function ChatPage() {
     setLoading(true);
 
     try {
-      // conversationId is null here — this is the first message, so a new conversation is created
-      const data = await askQuestion(initialQuestion, null);
+      if (isImageRequest(trimmed)) {
+        const imageUrl = generateImage(trimmed);
+        setMessages(prev => [...prev, {
+          role: 'assistant',
+          type: 'image',
+          imageUrl,
+          text: `Generated: "${trimmed}"`,
+          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        }]);
+        return;
+      }
 
-      // Capture the new conversationId for subsequent messages in this session
+      const data = await askQuestion(trimmed, null);
+
       if (data.conversationId) {
         setConversationId(data.conversationId);
       }
 
-      const aiMessage = {
+      setMessages(prev => [...prev, {
         role: 'assistant',
         text: data?.answer || data?.text || 'No response received from the server.',
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-      };
-
-      setMessages(prev => [...prev, aiMessage]);
+      }]);
 
     } catch (err) {
       console.error('Initial send error:', err);
-      setMessages(prev => [
-        ...prev,
-        {
-          role: 'assistant',
-          text: '⚠️ Failed to get a response. Please check your connection and try again.',
-          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        },
-      ]);
+      const errMsg = err.response?.data?.error || 'Something went wrong. Please try again.';
+      toast.error(errMsg);
+      setMessages(prev => [...prev, {
+        role: 'assistant',
+        text: `⚠️ ${errMsg}`,
+        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      }]);
+
     } finally {
       setLoading(false);
-      // Clear location state so a page refresh doesn't re-submit
       navigate(location.pathname, { replace: true, state: {} });
     }
   }, [location.pathname, navigate]);
@@ -139,6 +151,7 @@ function ChatPage() {
     if (!question.trim() || loading) return;
 
     const trimmed = question.trim();
+
     const userMessage = {
       role: 'user',
       text: trimmed,
@@ -150,31 +163,40 @@ function ChatPage() {
     setLoading(true);
 
     try {
+      if (isImageRequest(trimmed)) {
+        const imageUrl = generateImage(trimmed);
+        setMessages(prev => [...prev, {
+          role: 'assistant',
+          type: 'image',
+          imageUrl,
+          text: `Generated: "${trimmed}"`,
+          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        }]);
+        return;
+      }
+
       const data = await askQuestion(trimmed, conversationId);
 
-      // Update conversationId if this was the first message in a new chat
       if (!conversationId && data.conversationId) {
         setConversationId(data.conversationId);
       }
 
-      const aiMessage = {
+      setMessages(prev => [...prev, {
         role: 'assistant',
-        text: data?.answer || data?.text || 'Empty response received.',
+        text: data?.answer || 'Empty response received.',
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-      };
-
-      setMessages(prev => [...prev, aiMessage]);
+      }]);
 
     } catch (err) {
       console.error('Send error:', err);
-      setMessages(prev => [
-        ...prev,
-        {
-          role: 'assistant',
-          text: '⚠️ Something went wrong. Please try again.',
-          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        },
-      ]);
+      const errMsg = err.response?.data?.error || 'Something went wrong. Please try again.';
+      toast.error(errMsg);
+      setMessages(prev => [...prev, {
+        role: 'assistant',
+        text: `⚠️ ${errMsg}`,
+        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      }]);
+
     } finally {
       setLoading(false);
     }

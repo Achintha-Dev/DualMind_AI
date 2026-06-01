@@ -1,5 +1,7 @@
 import { useEffect, useRef } from "react";
+import { toast } from "react-hot-toast";
 import { FiArrowUp, FiPaperclip } from "react-icons/fi";
+import { IoInformationCircle } from "react-icons/io5";
 
 function ChatInput({ question, setQuestion, handleSend, loading }) {
 
@@ -29,6 +31,7 @@ function ChatInput({ question, setQuestion, handleSend, loading }) {
             
             {/* Main Interactive TextArea Box */}
             <textarea
+                id="chat-input"
                 ref={textareaRef}
                 value={question}
                 onChange={(e) => setQuestion(e.target.value)}
@@ -42,10 +45,14 @@ function ChatInput({ question, setQuestion, handleSend, loading }) {
             <div className="flex items-center justify-between pt-1 border-t border-zinc-100 dark:border-zinc-800/60">
               
               {/* Media Attachments Action Button */}
-              <button 
+              <button
                 type="button" 
-                title="Attach files or context"
-                className="p-2.5 rounded-xl hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-500 dark:text-zinc-400 transition-colors active:scale-95 cursor-pointer"
+                // title="Attach files or context"
+                className="lg:tooltip p-2.5 rounded-xl hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-500 dark:text-zinc-400 transition-colors active:scale-95 cursor-pointer"
+                data-tip="This feature is coming soon!"
+                onClick={() => toast('This feature is coming soon!', 
+                  { icon: <IoInformationCircle size={18} className="text-blue-500 scale-125" /> , position: 'bottom-center'}
+                )}
               >
                 <FiPaperclip size={18} />
               </button>

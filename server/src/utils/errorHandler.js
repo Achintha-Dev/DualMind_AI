@@ -1,7 +1,10 @@
 import config from '../config/config_index.js';
 
 export function errorHandler( err, req, res, next ){
-    console.error(`❌ [Error] ${err.message}`);
+    const status = err.status || 500;
+    const short = err.message.substring(0, 80);
+    
+    console.error(`❌ [${status}] ${short}`);
     
     // Zod validation errors
     if(err.name === 'ZodError') {
@@ -33,7 +36,10 @@ export function errorHandler( err, req, res, next ){
     }
     
     // generic fallback
-    const status = err.status || 500;
     const message = config.env === 'production' ? 'Something went wrong. Please try again!' : err.message;
-    return res.status(status).json({ error: message });
+    return res.status(status).json({
+        error: err.message.includes('429')
+            ? 'Chat limit reached. Try again later!'
+            : err.message.substring(0, 120) || 'Internal server error.',
+    });
 }
