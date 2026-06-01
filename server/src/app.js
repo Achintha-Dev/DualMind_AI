@@ -47,10 +47,10 @@ app.get('/health', (__, res) => {
 });
 
 // API Routes
-app.use('/api/chat', chatRoutes);
-app.use('/api/auth', authRoutes);
-app.use('/api/history', authenticate, historyRoutes);
-app.use('/api/image', imageRoutes);
+app.use('/chat', chatRoutes);
+app.use('/auth', authRoutes);
+app.use('/history', authenticate, historyRoutes);
+app.use('/image', imageRoutes);
 
 // 404 handler
 app.use((req, res) => {
